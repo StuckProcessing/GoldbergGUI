@@ -30,7 +30,7 @@ While the most used options are available right now, I am planning to support al
 * Subscribed Groups
 * Mods (Steam Workshop)
 * Inventory and Items
-* Achievements
+* ~~Achievements~~
 * Stats, Leaderboards
 * Controller (Steam Input)
 
@@ -40,8 +40,20 @@ Apart from those, I'm also always looking into improving the user experience of 
 
 Goldberg Emulator is owned by Mr. Goldberg and licensed under the GNU Lesser General Public License v3.0.
 
+### Contributors
+
+* [UrbanCMC](https://github.com/UrbanCMC/) - Implementation of achievements
+
+### Dependencies
+
+* AngleSharp
+* MvvmCross
+* NinjaNye
+* Serilog
+* SharpCompress
+* sqlite-net-pcl
+* My fork of SteamStorefrontAPI
+
 ## License
 
 GoldbergGUI is licensed under the GNU General Public License v3.0.
-
-Dependencies will be listed ASAP.
