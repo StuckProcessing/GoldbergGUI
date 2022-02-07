@@ -9,6 +9,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoldbergGUI.WPF", "Goldberg
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamStorefrontAPI", "SteamStorefrontAPI\SteamStorefrontAPI\SteamStorefrontAPI.csproj", "{42D17FA4-C45C-4CC1-BA9C-80B3FA1C006D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4E7DA860-D7FD-4090-B7EC-6DA3974DC845}"
+	ProjectSection(SolutionItems) = preProject
+		COPYING = COPYING
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
