@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="0.14.0" />
-    <PackageReference Include="MvvmCross" Version="7.1.2" />
+    <PackageReference Include="AngleSharp" Version="0.16.1" />
+    <PackageReference Include="MvvmCross" Version="8.0.2" />
     <PackageReference Include="NinjaNye.SearchExtensions" Version="3.0.1" />
-    <PackageReference Include="SharpCompress" Version="0.26.0" />
-    <PackageReference Include="sqlite-net-pcl" Version="1.7.335" />
-    <PackageReference Include="SteamStorefrontAPI.NETStandard" Version="1.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="SharpCompress" Version="0.31.0" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
   </ItemGroup>
 
   <ItemGroup>

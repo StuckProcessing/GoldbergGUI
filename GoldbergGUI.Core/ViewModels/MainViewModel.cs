@@ -1,9 +1,9 @@
 ﻿using GoldbergGUI.Core.Models;
 using GoldbergGUI.Core.Services;
 using GoldbergGUI.Core.Utils;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using MvvmCross.Commands;
-using MvvmCross.Logging;
 using MvvmCross.Navigation;
 using MvvmCross.ViewModels;
 using System;
@@ -42,20 +42,20 @@ namespace GoldbergGUI.Core.ViewModels
 
         private readonly ISteamService _steam;
         private readonly IGoldbergService _goldberg;
-        private readonly IMvxLog _log;
+        private readonly ILogger<MainViewModel> _log;
         private bool _mainWindowEnabled;
         private bool _goldbergApplied;
         private ObservableCollection<string> _steamLanguages;
         private string _selectedLanguage;
-        private readonly IMvxLogProvider _logProvider;
+        private readonly ILoggerFactory _logProvider;
 
-        public MainViewModel(ISteamService steam, IGoldbergService goldberg, IMvxLogProvider logProvider,
+        public MainViewModel(ISteamService steam, IGoldbergService goldberg, ILoggerFactory logProvider,
             IMvxNavigationService navigationService) : base(logProvider, navigationService)
         {
             _steam = steam;
             _goldberg = goldberg;
             _logProvider = logProvider;
-            _log = logProvider.GetLogFor<MainViewModel>();
+            _log = logProvider.CreateLogger<MainViewModel>();
             _navigationService = navigationService;
         }
 
@@ -71,9 +71,9 @@ namespace GoldbergGUI.Core.ViewModels
                 {
                     SteamLanguages = new ObservableCollection<string>(_goldberg.Languages());
                     ResetForm();
-                    await _steam.Initialize(_logProvider.GetLogFor<SteamService>()).ConfigureAwait(false);
+                    await _steam.Initialize(_logProvider.CreateLogger<SteamService>()).ConfigureAwait(false);
                     var globalConfiguration =
-                        await _goldberg.Initialize(_logProvider.GetLogFor<GoldbergService>()).ConfigureAwait(false);
+                        await _goldberg.Initialize(_logProvider.CreateLogger<GoldbergService>()).ConfigureAwait(false);
                     AccountName = globalConfiguration.AccountName;
                     SteamId = globalConfiguration.UserSteamId;
                     SelectedLanguage = globalConfiguration.Language;
@@ -81,7 +81,7 @@ namespace GoldbergGUI.Core.ViewModels
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    _log.Error(e.Message);
+                    _log.LogError(e.Message);
                     throw;
                 }
 
@@ -237,7 +237,7 @@ namespace GoldbergGUI.Core.ViewModels
             get
             {
                 var value = !DllPath.Contains("Path to game's steam_api(64).dll");
-                if (!value) _log.Warn("No DLL selected! Skipping...");
+                if (!value) _log.LogWarning("No DLL selected! Skipping...");
                 return value;
             }
         }
@@ -296,7 +296,7 @@ namespace GoldbergGUI.Core.ViewModels
             if (dialog.ShowDialog() != true)
             {
                 MainWindowEnabled = true;
-                _log.Warn("File selection canceled.");
+                _log.LogWarning("File selection canceled.");
                 StatusText = "No file selected! Ready.";
                 return;
             }
@@ -326,7 +326,7 @@ namespace GoldbergGUI.Core.ViewModels
 
             if (GameName.Contains("Game name..."))
             {
-                _log.Error("No game name entered!");
+                _log.LogError("No game name entered!");
                 return;
             }
 
@@ -371,7 +371,7 @@ namespace GoldbergGUI.Core.ViewModels
         {
             if (AppId <= 0)
             {
-                _log.Error("Invalid Steam App!");
+                _log.LogError("Invalid Steam App!");
                 return;
             }
 
@@ -385,7 +385,7 @@ namespace GoldbergGUI.Core.ViewModels
         {
             if (AppId <= 0)
             {
-                _log.Error("Invalid Steam App!");
+                _log.LogError("Invalid Steam App!");
                 return;
             }
 
@@ -412,7 +412,7 @@ namespace GoldbergGUI.Core.ViewModels
         {
             if (AppId <= 0)
             {
-                _log.Error("Invalid Steam App!");
+                _log.LogError("Invalid Steam App!");
                 return;
             }
 
@@ -437,7 +437,7 @@ namespace GoldbergGUI.Core.ViewModels
 
         private async Task SaveConfig()
         {
-            _log.Info("Saving global settings...");
+            _log.LogInformation("Saving global settings...");
             var globalConfiguration = new GoldbergGlobalConfiguration
             {
                 AccountName = AccountName,
@@ -447,7 +447,7 @@ namespace GoldbergGUI.Core.ViewModels
             await _goldberg.SetGlobalSettings(globalConfiguration).ConfigureAwait(false);
             if (!DllSelected) return;
 
-            _log.Info("Saving Goldberg settings...");
+            _log.LogInformation("Saving Goldberg settings...");
             if (!GetDllPathDir(out var dirPath)) return;
             MainWindowEnabled = false;
             StatusText = "Saving...";
@@ -476,7 +476,7 @@ namespace GoldbergGUI.Core.ViewModels
             SelectedLanguage = globalConfiguration.Language;
             if (!DllSelected) return;
 
-            _log.Info("Reset form...");
+            _log.LogInformation("Reset form...");
             MainWindowEnabled = false;
             StatusText = "Resetting...";
             await ReadConfig().ConfigureAwait(false);
@@ -490,7 +490,7 @@ namespace GoldbergGUI.Core.ViewModels
         {
             if (!DllSelected) return;
 
-            _log.Info("Generate steam_interfaces.txt...");
+            _log.LogInformation("Generate steam_interfaces.txt...");
             MainWindowEnabled = false;
             StatusText = @"Generating ""steam_interfaces.txt"".";
             GetDllPathDir(out var dirPath);
@@ -508,10 +508,10 @@ namespace GoldbergGUI.Core.ViewModels
         public IMvxCommand PasteDlcCommand => new MvxCommand(() =>
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return;
-            _log.Info("Trying to paste DLC list...");
+            _log.LogInformation("Trying to paste DLC list...");
             if (!(Clipboard.ContainsText(TextDataFormat.UnicodeText) || Clipboard.ContainsText(TextDataFormat.Text)))
             {
-                _log.Warn("Invalid DLC list!");
+                _log.LogWarning("Invalid DLC list!");
             }
             else
             {
@@ -604,7 +604,7 @@ namespace GoldbergGUI.Core.ViewModels
             dirPath = Path.GetDirectoryName(DllPath);
             if (dirPath != null) return true;
 
-            _log.Error($"Invalid directory for {DllPath}.");
+            _log.LogError($"Invalid directory for {DllPath}.");
             return false;
         }
     }

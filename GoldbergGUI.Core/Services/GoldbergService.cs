@@ -1,6 +1,6 @@
 using GoldbergGUI.Core.Models;
 using GoldbergGUI.Core.Utils;
-using MvvmCross.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +18,7 @@ namespace GoldbergGUI.Core.Services
     // does file copy stuff
     public interface IGoldbergService
     {
-        public Task<GoldbergGlobalConfiguration> Initialize(IMvxLog log);
+        public Task<GoldbergGlobalConfiguration> Initialize(ILogger<IGoldbergService> log);
         public Task<GoldbergConfiguration> Read(string path);
         public Task Save(string path, GoldbergConfiguration configuration);
         public Task<GoldbergGlobalConfiguration> GetGlobalSettings();
@@ -32,7 +32,7 @@ namespace GoldbergGUI.Core.Services
     // ReSharper disable once ClassNeverInstantiated.Global
     public class GoldbergService : IGoldbergService
     {
-        private IMvxLog _log;
+        private ILogger<IGoldbergService> _log;
         private const string DefaultAccountName = "Mr_Goldberg";
         private const long DefaultSteamId = 76561197960287930;
         private const string DefaultLanguage = "english";
@@ -82,7 +82,7 @@ namespace GoldbergGUI.Core.Services
 
         // Call Download
         // Get global settings
-        public async Task<GoldbergGlobalConfiguration> Initialize(IMvxLog log)
+        public async Task<GoldbergGlobalConfiguration> Initialize(ILogger<IGoldbergService> log)
         {
             _log = log;
 
@@ -97,7 +97,7 @@ namespace GoldbergGUI.Core.Services
 
         public async Task<GoldbergGlobalConfiguration> GetGlobalSettings()
         {
-            _log.Info("Getting global settings...");
+            _log.LogInformation("Getting global settings...");
             var accountName = DefaultAccountName;
             var steamId = DefaultSteamId;
             var language = DefaultLanguage;
@@ -110,7 +110,7 @@ namespace GoldbergGUI.Core.Services
                     !long.TryParse(File.ReadLines(_userSteamIdPath).First().Trim(), out steamId) &&
                     steamId < 76561197960265729 && steamId > 76561202255233023)
                 {
-                    _log.Error("Invalid User Steam ID! Using default Steam ID...");
+                    _log.LogError("Invalid User Steam ID! Using default Steam ID...");
                     steamId = DefaultSteamId;
                 }
 
@@ -119,7 +119,7 @@ namespace GoldbergGUI.Core.Services
                     customBroadcastIps.AddRange(
                         File.ReadLines(_customBroadcastIpsPath).Select(line => line.Trim()));
             }).ConfigureAwait(false);
-            _log.Info("Got global settings.");
+            _log.LogInformation("Got global settings.");
             return new GoldbergGlobalConfiguration
             {
                 AccountName = accountName,
@@ -135,18 +135,18 @@ namespace GoldbergGUI.Core.Services
             var userSteamId = c.UserSteamId;
             var language = c.Language;
             var customBroadcastIps = c.CustomBroadcastIps;
-            _log.Info("Setting global settings...");
+            _log.LogInformation("Setting global settings...");
             // Account Name
             if (!string.IsNullOrEmpty(accountName))
             {
-                _log.Info("Setting account name...");
+                _log.LogInformation("Setting account name...");
                 if (!File.Exists(_accountNamePath))
                     await File.Create(_accountNamePath).DisposeAsync().ConfigureAwait(false);
                 await File.WriteAllTextAsync(_accountNamePath, accountName).ConfigureAwait(false);
             }
             else
             {
-                _log.Info("Invalid account name! Skipping...");
+                _log.LogInformation("Invalid account name! Skipping...");
                 if (!File.Exists(_accountNamePath))
                     await File.Create(_accountNamePath).DisposeAsync().ConfigureAwait(false);
                 await File.WriteAllTextAsync(_accountNamePath, DefaultAccountName).ConfigureAwait(false);
@@ -155,14 +155,14 @@ namespace GoldbergGUI.Core.Services
             // User SteamID
             if (userSteamId >= 76561197960265729 && userSteamId <= 76561202255233023)
             {
-                _log.Info("Setting user Steam ID...");
+                _log.LogInformation("Setting user Steam ID...");
                 if (!File.Exists(_userSteamIdPath))
                     await File.Create(_userSteamIdPath).DisposeAsync().ConfigureAwait(false);
                 await File.WriteAllTextAsync(_userSteamIdPath, userSteamId.ToString()).ConfigureAwait(false);
             }
             else
             {
-                _log.Info("Invalid user Steam ID! Skipping...");
+                _log.LogInformation("Invalid user Steam ID! Skipping...");
                 if (!File.Exists(_userSteamIdPath))
                     await File.Create(_userSteamIdPath).DisposeAsync().ConfigureAwait(false);
                 await File.WriteAllTextAsync(_userSteamIdPath, DefaultSteamId.ToString()).ConfigureAwait(false);
@@ -171,14 +171,14 @@ namespace GoldbergGUI.Core.Services
             // Language
             if (!string.IsNullOrEmpty(language))
             {
-                _log.Info("Setting language...");
+                _log.LogInformation("Setting language...");
                 if (!File.Exists(_languagePath))
                     await File.Create(_languagePath).DisposeAsync().ConfigureAwait(false);
                 await File.WriteAllTextAsync(_languagePath, language).ConfigureAwait(false);
             }
             else
             {
-                _log.Info("Invalid language! Skipping...");
+                _log.LogInformation("Invalid language! Skipping...");
                 if (!File.Exists(_languagePath))
                     await File.Create(_languagePath).DisposeAsync().ConfigureAwait(false);
                 await File.WriteAllTextAsync(_languagePath, DefaultLanguage).ConfigureAwait(false);
@@ -187,7 +187,7 @@ namespace GoldbergGUI.Core.Services
             // Custom Broadcast IPs
             if (customBroadcastIps != null && customBroadcastIps.Count > 0)
             {
-                _log.Info("Setting custom broadcast IPs...");
+                _log.LogInformation("Setting custom broadcast IPs...");
                 var result =
                     customBroadcastIps.Aggregate("", (current, address) => $"{current}{address}\n");
                 if (!File.Exists(_customBroadcastIpsPath))
@@ -196,50 +196,50 @@ namespace GoldbergGUI.Core.Services
             }
             else
             {
-                _log.Info("Empty list of custom broadcast IPs! Skipping...");
+                _log.LogInformation("Empty list of custom broadcast IPs! Skipping...");
                 await Task.Run(() => File.Delete(_customBroadcastIpsPath)).ConfigureAwait(false);
             }
-            _log.Info("Setting global configuration finished.");
+            _log.LogInformation("Setting global configuration finished.");
         }
 
         // If first time, call GenerateInterfaces
         // else try to read config
         public async Task<GoldbergConfiguration> Read(string path)
         {
-            _log.Info("Reading configuration...");
+            _log.LogInformation("Reading configuration...");
             var appId = -1;
             var achievementList = new List<Achievement>();
             var dlcList = new List<DlcApp>();
             var steamAppidTxt = Path.Combine(path, "steam_appid.txt");
             if (File.Exists(steamAppidTxt))
             {
-                _log.Info("Getting AppID...");
+                _log.LogInformation("Getting AppID...");
                 await Task.Run(() => int.TryParse(File.ReadLines(steamAppidTxt).First().Trim(), out appId))
                     .ConfigureAwait(false);
             }
             else
             {
-                _log.Info(@"""steam_appid.txt"" missing! Skipping...");
+                _log.LogInformation(@"""steam_appid.txt"" missing! Skipping...");
             }
 
             var achievementJson = Path.Combine(path, "steam_settings", "achievements.json");
             if (File.Exists(achievementJson))
             {
-                _log.Info("Getting achievements...");
+                _log.LogInformation("Getting achievements...");
                 var json = await File.ReadAllTextAsync(achievementJson)
                     .ConfigureAwait(false);
                 achievementList = System.Text.Json.JsonSerializer.Deserialize<List<Achievement>>(json);
             }
             else
             {
-                _log.Info(@"""steam_settings/achievements.json"" missing! Skipping...");
+                _log.LogInformation(@"""steam_settings/achievements.json"" missing! Skipping...");
             }
 
             var dlcTxt = Path.Combine(path, "steam_settings", "DLC.txt");
             var appPathTxt = Path.Combine(path, "steam_settings", "app_paths.txt");
             if (File.Exists(dlcTxt))
             {
-                _log.Info("Getting DLCs...");
+                _log.LogInformation("Getting DLCs...");
                 var readAllLinesAsync = await File.ReadAllLinesAsync(dlcTxt).ConfigureAwait(false);
                 var expression = new Regex(@"(?<id>.*) *= *(?<name>.*)");
                 // ReSharper disable once LoopCanBeConvertedToQuery
@@ -271,7 +271,7 @@ namespace GoldbergGUI.Core.Services
             }
             else
             {
-                _log.Info(@"""steam_settings/DLC.txt"" missing! Skipping...");
+                _log.LogInformation(@"""steam_settings/DLC.txt"" missing! Skipping...");
             }
 
             return new GoldbergConfiguration
@@ -291,9 +291,9 @@ namespace GoldbergGUI.Core.Services
         // Save configuration files
         public async Task Save(string path, GoldbergConfiguration c)
         {
-            _log.Info("Saving configuration...");
+            _log.LogInformation("Saving configuration...");
             // DLL setup
-            _log.Info("Running DLL setup...");
+            _log.LogInformation("Running DLL setup...");
             const string x86Name = "steam_api";
             const string x64Name = "steam_api64";
             if (File.Exists(Path.Combine(path, $"{x86Name}.dll")))
@@ -305,10 +305,10 @@ namespace GoldbergGUI.Core.Services
             {
                 CopyDllFiles(path, x64Name);
             }
-            _log.Info("DLL setup finished!");
+            _log.LogInformation("DLL setup finished!");
 
             // Create steam_settings folder if missing
-            _log.Info("Saving settings...");
+            _log.LogInformation("Saving settings...");
             if (!Directory.Exists(Path.Combine(path, "steam_settings")))
             {
                 Directory.CreateDirectory(Path.Combine(path, "steam_settings"));
@@ -321,7 +321,7 @@ namespace GoldbergGUI.Core.Services
             // Achievements + Images
             if (c.Achievements.Count > 0)
             {
-                _log.Info("Downloading images...");
+                _log.LogInformation("Downloading images...");
                 var imagePath = Path.Combine(path, "steam_settings", "images");
                 Directory.CreateDirectory(imagePath);
 
@@ -335,7 +335,7 @@ namespace GoldbergGUI.Core.Services
                     achievement.IconGray = $"images/{Path.GetFileName(achievement.IconGray)}";
                 }
 
-                _log.Info("Saving achievements...");
+                _log.LogInformation("Saving achievements...");
 
                 var achievementJson = System.Text.Json.JsonSerializer.Serialize(
                     c.Achievements,
@@ -347,11 +347,11 @@ namespace GoldbergGUI.Core.Services
                 await File.WriteAllTextAsync(Path.Combine(path, "steam_settings", "achievements.json"), achievementJson)
                     .ConfigureAwait(false);
 
-                _log.Info("Finished saving achievements.");
+                _log.LogInformation("Finished saving achievements.");
             }
             else
             {
-                _log.Info("No achievements set! Removing achievement files...");
+                _log.LogInformation("No achievements set! Removing achievement files...");
                 var imagePath = Path.Combine(path, "steam_settings", "images");
                 if (Directory.Exists(imagePath))
                 {
@@ -362,13 +362,13 @@ namespace GoldbergGUI.Core.Services
                 {
                     File.Delete(achievementPath);
                 }
-                _log.Info("Removed achievement files.");
+                _log.LogInformation("Removed achievement files.");
             }
 
             // DLC + App path
             if (c.DlcList.Count > 0)
             {
-                _log.Info("Saving DLC settings...");
+                _log.LogInformation("Saving DLC settings...");
                 var dlcContent = "";
                 //var depotContent = "";
                 var appPathContent = "";
@@ -399,54 +399,54 @@ namespace GoldbergGUI.Core.Services
                     if (File.Exists(Path.Combine(path, "steam_settings", "app_paths.txt")))
                         File.Delete(Path.Combine(path, "steam_settings", "app_paths.txt"));
                 }
-                _log.Info("Saved DLC settings.");
+                _log.LogInformation("Saved DLC settings.");
             }
             else
             {
-                _log.Info("No DLC set! Removing DLC configuration files...");
+                _log.LogInformation("No DLC set! Removing DLC configuration files...");
                 if (File.Exists(Path.Combine(path, "steam_settings", "DLC.txt")))
                     File.Delete(Path.Combine(path, "steam_settings", "DLC.txt"));
                 if (File.Exists(Path.Combine(path, "steam_settings", "app_paths.txt")))
                     File.Delete(Path.Combine(path, "steam_settings", "app_paths.txt"));
-                _log.Info("Removed DLC configuration files.");
+                _log.LogInformation("Removed DLC configuration files.");
             }
 
             // Offline
             if (c.Offline)
             {
-                _log.Info("Create offline.txt");
+                _log.LogInformation("Create offline.txt");
                 await File.Create(Path.Combine(path, "steam_settings", "offline.txt")).DisposeAsync()
                     .ConfigureAwait(false);
             }
             else
             {
-                _log.Info("Delete offline.txt if it exists");
+                _log.LogInformation("Delete offline.txt if it exists");
                 File.Delete(Path.Combine(path, "steam_settings", "offline.txt"));
             }
 
             // Disable Networking
             if (c.DisableNetworking)
             {
-                _log.Info("Create disable_networking.txt");
+                _log.LogInformation("Create disable_networking.txt");
                 await File.Create(Path.Combine(path, "steam_settings", "disable_networking.txt")).DisposeAsync()
                     .ConfigureAwait(false);
             }
             else
             {
-                _log.Info("Delete disable_networking.txt if it exists");
+                _log.LogInformation("Delete disable_networking.txt if it exists");
                 File.Delete(Path.Combine(path, "steam_settings", "disable_networking.txt"));
             }
 
             // Disable Overlay
             if (c.DisableOverlay)
             {
-                _log.Info("Create disable_overlay.txt");
+                _log.LogInformation("Create disable_overlay.txt");
                 await File.Create(Path.Combine(path, "steam_settings", "disable_overlay.txt")).DisposeAsync()
                     .ConfigureAwait(false);
             }
             else
             {
-                _log.Info("Delete disable_overlay.txt if it exists");
+                _log.LogInformation("Delete disable_overlay.txt if it exists");
                 File.Delete(Path.Combine(path, "steam_settings", "disable_overlay.txt"));
             }
         }
@@ -460,7 +460,7 @@ namespace GoldbergGUI.Core.Services
 
             if (!File.Exists(originalDll))
             {
-                _log.Info("Back up original Steam API DLL...");
+                _log.LogInformation("Back up original Steam API DLL...");
                 File.Move(steamApiDll, originalDll);
             }
             else
@@ -469,7 +469,7 @@ namespace GoldbergGUI.Core.Services
                 File.SetAttributes(guiBackup, FileAttributes.Hidden);
             }
 
-            _log.Info("Copy Goldberg DLL to target path...");
+            _log.LogInformation("Copy Goldberg DLL to target path...");
             File.Copy(goldbergDll, steamApiDll);
         }
 
@@ -477,7 +477,7 @@ namespace GoldbergGUI.Core.Services
         {
             var steamSettingsDirExists = Directory.Exists(Path.Combine(path, "steam_settings"));
             var steamAppIdTxtExists = File.Exists(Path.Combine(path, "steam_appid.txt"));
-            _log.Debug($"Goldberg applied? {(steamSettingsDirExists && steamAppIdTxtExists).ToString()}");
+            _log.LogDebug($"Goldberg applied? {steamSettingsDirExists && steamAppIdTxtExists}");
             return steamSettingsDirExists && steamAppIdTxtExists;
         }
 
@@ -486,7 +486,7 @@ namespace GoldbergGUI.Core.Services
             // Get webpage
             // Get job id, compare with local if exists, save it if false or missing
             // Get latest archive if mismatch, call Extract
-            _log.Info("Initializing download...");
+            _log.LogInformation("Initializing download...");
             if (!Directory.Exists(_goldbergPath)) Directory.CreateDirectory(_goldbergPath);
             var client = new HttpClient();
             var response = await client.GetAsync(GoldbergUrl).ConfigureAwait(false);
@@ -499,23 +499,23 @@ namespace GoldbergGUI.Core.Services
             {
                 try
                 {
-                    _log.Info("Check if update is needed...");
+                    _log.LogInformation("Check if update is needed...");
                     var jobIdLocal = Convert.ToInt32(File.ReadLines(jobIdPath).First().Trim());
                     var jobIdRemote = Convert.ToInt32(match.Groups["jobid"].Value);
-                    _log.Debug($"job_id: local {jobIdLocal}; remote {jobIdRemote}");
+                    _log.LogDebug($"job_id: local {jobIdLocal}; remote {jobIdRemote}");
                     if (jobIdLocal.Equals(jobIdRemote))
                     {
-                        _log.Info("Latest Goldberg emulator is already available! Skipping...");
+                        _log.LogInformation("Latest Goldberg emulator is already available! Skipping...");
                         return false;
                     }
                 }
                 catch (Exception)
                 {
-                    _log.Error("An error occured, local Goldberg setup might be broken!");
+                    _log.LogError("An error occured, local Goldberg setup might be broken!");
                 }
             }
 
-            _log.Info("Starting download...");
+            _log.LogInformation("Starting download...");
             await StartDownload(match.Value).ConfigureAwait(false);
             return true;
         }
@@ -525,7 +525,7 @@ namespace GoldbergGUI.Core.Services
             try
             {
                 var client = new HttpClient();
-                _log.Debug(downloadUrl);
+                _log.LogDebug(downloadUrl);
                 await using var fileStream = File.OpenWrite(_goldbergZipPath);
                 //client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead)
                 var httpRequestMessage = new HttpRequestMessage(HttpMethod.Head, downloadUrl);
@@ -539,7 +539,7 @@ namespace GoldbergGUI.Core.Services
                     // Environment.Exit(128);
                     if (contentLength == fileLength)
                     {
-                        _log.Info("Download finished!");
+                        _log.LogInformation("Download finished!");
                     }
                     else
                     {
@@ -550,7 +550,7 @@ namespace GoldbergGUI.Core.Services
             catch (Exception e)
             {
                 ShowErrorMessage();
-                _log.Error(e.ToString);
+                _log.LogError(e.ToString());
                 Environment.Exit(1);
             }
         }
@@ -560,7 +560,7 @@ namespace GoldbergGUI.Core.Services
         private async Task Extract(string archivePath)
         {
             var errorOccured = false;
-            _log.Debug("Start extraction...");
+            _log.LogDebug("Start extraction...");
             Directory.Delete(_goldbergPath, true);
             Directory.CreateDirectory(_goldbergPath);
             using (var archive = await Task.Run(() => ZipFile.OpenRead(archivePath)).ConfigureAwait(false))
@@ -584,8 +584,8 @@ namespace GoldbergGUI.Core.Services
                         catch (Exception e)
                         {
                             errorOccured = true;
-                            _log.Error($"Error while trying to extract {entry.FullName}");
-                            _log.Error(e.ToString);
+                            _log.LogError($"Error while trying to extract {entry.FullName}");
+                            _log.LogError(e.ToString());
                         }
                     }).ConfigureAwait(false);
                 }
@@ -594,9 +594,9 @@ namespace GoldbergGUI.Core.Services
             if (errorOccured)
             {
                 ShowErrorMessage();
-                _log.Warn("Error occured while extraction! Please setup Goldberg manually");
+                _log.LogWarning("Error occured while extraction! Please setup Goldberg manually");
             }
-            _log.Info("Extraction was successful!");
+            _log.LogInformation("Extraction was successful!");
         }
 
         private void ShowErrorMessage()
@@ -615,7 +615,7 @@ namespace GoldbergGUI.Core.Services
         // (maybe) check DLL date first
         public async Task GenerateInterfacesFile(string filePath)
         {
-            _log.Debug($"GenerateInterfacesFile {filePath}");
+            _log.LogDebug($"GenerateInterfacesFile {filePath}");
             //throw new NotImplementedException();
             // Get DLL content
             var result = new HashSet<string>();
@@ -694,7 +694,7 @@ namespace GoldbergGUI.Core.Services
             }
             else if (imageUrl.StartsWith("images/"))
             {
-                _log.Warn($"Previously downloaded image '{imageUrl}' is now missing!");
+                _log.LogWarning($"Previously downloaded image '{imageUrl}' is now missing!");
             }
 
             var wc = new System.Net.WebClient();
