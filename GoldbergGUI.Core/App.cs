@@ -13,7 +13,6 @@ namespace GoldbergGUI.Core
                 .EndingWith("Service")
                 .AsInterfaces()
                 .RegisterAsLazySingleton();
-            //RegisterAppStart<MainViewModel>();
             RegisterCustomAppStart<CustomMvxAppStart<MainViewModel>>();
         }
     }

@@ -259,7 +259,7 @@ namespace GoldbergGUI.Core.ViewModels
             {
                 _selectedLanguage = value;
                 RaisePropertyChanged(() => SelectedLanguage);
-                //MyLogger.Log.Debug($"Lang: {value}");
+                //_log.LogDebug($"Lang: {value}");
             }
         }
 
@@ -391,7 +391,7 @@ namespace GoldbergGUI.Core.ViewModels
 
             MainWindowEnabled = false;
             StatusText = "Trying to get list of achievements...";
-            var listOfAchievements = await _steam.GetListOfAchievements(new SteamApp { AppId = AppId, Name = GameName });
+            var listOfAchievements = await _steam.GetListOfAchievements(new SteamApp { AppId = AppId, Name = GameName }).ConfigureAwait(false);
             Achievements = new MvxObservableCollection<Achievement>(listOfAchievements);
             MainWindowEnabled = true;
 

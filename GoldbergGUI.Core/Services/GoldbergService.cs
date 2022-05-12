@@ -327,8 +327,8 @@ namespace GoldbergGUI.Core.Services
 
                 foreach (var achievement in c.Achievements)
                 {
-                    await DownloadImageAsync(imagePath, achievement.Icon);
-                    await DownloadImageAsync(imagePath, achievement.IconGray);
+                    await DownloadImageAsync(imagePath, achievement.Icon).ConfigureAwait(false);
+                    await DownloadImageAsync(imagePath, achievement.IconGray).ConfigureAwait(false);
 
                     // Update achievement list to point to local images instead
                     achievement.Icon = $"images/{Path.GetFileName(achievement.Icon)}";
@@ -698,7 +698,7 @@ namespace GoldbergGUI.Core.Services
             }
 
             var wc = new System.Net.WebClient();
-            await wc.DownloadFileTaskAsync(new Uri(imageUrl, UriKind.Absolute), targetPath);
+            await wc.DownloadFileTaskAsync(new Uri(imageUrl, UriKind.Absolute), targetPath).ConfigureAwait(false);
         }
     }
 }

@@ -184,7 +184,7 @@ namespace GoldbergGUI.Core.Services
             client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
             var apiUrl = $"{GameSchemaUrl}?key={Secrets.SteamWebApiKey()}&appid={steamApp.AppId}&l=en";
 
-            var response = await client.GetAsync(apiUrl);
+            var response = await client.GetAsync(apiUrl).ConfigureAwait(false);
             var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             var jsonResponse = JsonDocument.Parse(responseBody);
